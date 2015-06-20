@@ -1,0 +1,16 @@
+num_threads 16
+view_size 600 400
+camera_pos 64 64 256
+camera_dir 0.01 1 -1.5
+camera_fov 60.0
+map_image img/heightmap.png 64
+
+# white
+light_source  1.0  1.0 1.0  1.0 1.0 1.0
+# red
+# light_source  1.0  1.0 1.0  1.0 0.0 0.0
+# green
+# light_source -1.0  1.0 1.0  0.0 1.0 0.0
+# blue
+# light_source -1.0 -1.0 1.0  0.0 0.0 1.0
+

@@ -11,7 +11,7 @@ public:
 		m_tmax = tmax;
 	}
 
-	t_vector point(float t) const { return (m_pos + t * m_dir); }
+	t_vector point(float t) const { return (m_pos + m_dir * t); }
 
 	bool is_in_range(float t) const { return (t > 0.0f && (t < m_tmax || m_tmax < 0.0f)); }
 	bool time_in_rect(float& tmin, float& tmax,  float xmin, float xmax, float ymin, float ymax) const;

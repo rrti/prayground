@@ -294,12 +294,14 @@ void t_renderer::display() {
 	m_camera->pos() += (m_camera->dir() * camera_move_dist * elapsed_time_s);
 	m_camera->dir().rotate_z(camera_azim_angle * elapsed_time_s);
 	m_camera->dir().rotate_xy(camera_elev_angle * elapsed_time_s);
+	m_camera->update(m_camera->dir());
 	m_scene->modify_light_source(0, light_azim_angle * elapsed_time_s, light_elev_angle * elapsed_time_s);
 
 	switch (m_mouse_button) {
 		case GLUT_LEFT_BUTTON: {
 			m_camera->dir().rotate_z(-m_diff_mouse_x * m_mouse_scale);
 			m_camera->dir().rotate_xy(-m_diff_mouse_y * m_mouse_scale);
+			m_camera->update(m_camera->dir());
 		} break;
 		case GLUT_RIGHT_BUTTON: {
 			m_scene->modify_light_source(0, -m_diff_mouse_x * m_mouse_scale, -m_diff_mouse_y * m_mouse_scale);
@@ -427,14 +429,13 @@ void t_renderer::trace_rays(size_t xmin, size_t xmax, size_t ymin, size_t ymax) 
 		m_barrier->wait();
 		#endif
 
-		// compose the camera's coordinate-system
-		const t_vector& cam_fwd_dir = m_camera->dir();
-		const t_vector  cam_rgt_dir = cam_fwd_dir ^ t_vector(0.0f, 0.0f, 1.0f);
-		const t_vector  cam_up_dir = cam_rgt_dir ^ cam_fwd_dir;
+		const t_vector& cam_fwd_dir = m_camera->dir(CAM_FWD_DIR);
+		const t_vector& cam_rgt_dir = m_camera->dir(CAM_RGT_DIR);
+		const t_vector& cam_upw_dir = m_camera->dir(CAM_UPW_DIR);
 
 		for (size_t y = ymin; y < ymax; y++) {
 			const float yrel = (y * 1.0f / m_camera->get_view_size_y()) - 0.5f;
-			const t_vector pxl_up_dir = cam_up_dir * (yrel / aspect);
+			const t_vector pxl_up_dir = cam_upw_dir * (yrel / aspect);
 
 			for (size_t x = xmin; x < xmax; x++) {
 				const float xrel = (x * 1.0f / m_camera->get_view_size_x()) - 0.5f;
@@ -471,9 +472,9 @@ void t_renderer::trace_ray_columns(size_t xmin, size_t xmax, size_t ymin, size_t
 		m_barrier->wait();
 		#endif
 
-		const t_vector& cam_fwd_dir = m_camera->dir();
-		const t_vector  cam_rgt_dir = cam_fwd_dir ^ t_vector(0.0f, 0.0f, 1.0f);
-		const t_vector  cam_up_dir = cam_rgt_dir ^ cam_fwd_dir;
+		const t_vector& cam_fwd_dir = m_camera->dir(CAM_FWD_DIR);
+		const t_vector& cam_rgt_dir = m_camera->dir(CAM_RGT_DIR);
+		const t_vector& cam_upw_dir = m_camera->dir(CAM_UPW_DIR);
 
 		for (size_t x = xmin; x < xmax; x++) {
 			const float xrel = (x * 1.0f / m_camera->get_view_size_x()) - 0.5f;
@@ -488,7 +489,7 @@ void t_renderer::trace_ray_columns(size_t xmin, size_t xmax, size_t ymin, size_t
 			for (size_t y = ymin; y < ymax; y++) {
 				const float yrel = (y * 1.0f / m_camera->get_view_size_y()) - 0.5f;
 
-				const t_vector pxl_up_dir = cam_up_dir * (yrel * fscale / aspect);
+				const t_vector pxl_up_dir = cam_upw_dir * (yrel * fscale / aspect);
 				const t_vector pxl_ray_dir = (cam_fwd_dir + pxl_up_dir + pxl_rgt_dir).normalize_xyz();
 
 				dirs[y - ymin] = pxl_ray_dir;
@@ -524,15 +525,15 @@ void t_renderer::trace_ray_slope_columns(size_t xmin, size_t xmax, size_t ymin, 
 		m_barrier->wait();
 		#endif
 
-		const t_vector& cam_fwd_dir = m_camera->dir();
-		const t_vector  cam_rgt_dir = cam_fwd_dir ^ t_vector(0.0f, 0.0f, 1.0f);
-		const t_vector  cam_up_dir = cam_rgt_dir ^ cam_fwd_dir;
+		const t_vector& cam_fwd_dir = m_camera->dir(CAM_FWD_DIR);
+		const t_vector& cam_rgt_dir = m_camera->dir(CAM_RGT_DIR);
+		const t_vector& cam_upw_dir = m_camera->dir(CAM_UPW_DIR);
 
 		// for each pixel in the column, set its vertical slope
 		for (size_t y = ymin; y < ymax; y++) {
 			const float yrel = (y * 1.0f / m_camera->get_view_size_y()) - 0.5f;
 
-			const t_vector pxl_up_dir = cam_up_dir * (yrel / aspect);
+			const t_vector pxl_up_dir = cam_upw_dir * (yrel / aspect);
 			const t_vector col_fwd_dir = cam_fwd_dir + pxl_up_dir;
 
 			slopes[y - ymin] = col_fwd_dir.get_slope();
